@@ -16,7 +16,7 @@ module lfsr (
                       lfsr_reg[10];
 
     always @(posedge clk) begin
-        if (rst)
+        if (rst || lfsr_reg == 0) // sifira esit olmasina izin vermeyin demisler sansa 0 olursa diye ne olur ne olmaz kontrol ekledim
             lfsr_reg <= 16'hACE1; // sýfýrdan farklý seed deðeri
         else
             lfsr_reg <= {lfsr_reg[14:0], feedback}; // bu durumda sola kaydýr ve feedback bitini ekle
