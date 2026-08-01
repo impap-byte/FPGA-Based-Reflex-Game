@@ -1,6 +1,5 @@
  `timescale 1ns / 1ps
 
-
 module button_debounce #(parameter DEBOUNCE_LIMIT = 1000000)(
     input clk,
     input rst,
