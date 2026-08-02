@@ -2,20 +2,21 @@
 
 module seven_segment_driver(
 
-    input wire clk,
-    input wire reset,
-    input wire display_enable,
+    input clk,
+    input reset,
+    input display_enable,
     // Gösterilecek dört rakam
-    input wire [3:0] digit0,
-    input wire [3:0] digit1,
-    input wire [3:0] digit2,
-    input wire [3:0] digit3,
+    input [3:0] digit0,
+    input [3:0] digit1,
+    input [3:0] digit2,
+    input [3:0] digit3,
+    input [3:0] digit_enable_mask,
     // Basys3 7 segment çıkışları
     output reg [6:0] seg,
     output reg [3:0] an
 
 );
-   
+    
     reg [16:0] refresh_counter;
 
     always @(posedge clk) begin
@@ -45,25 +46,25 @@ module seven_segment_driver(
                 // Birinci basamak
                 2'b00:
                 begin
-                    an = 4'b1110;
+                    an = (digit_enable_mask[0]) ? 4'b1110 : 4'b1111;
                     current_digit = digit0;
                 end
                 // İkinci basamak
                 2'b01:
                 begin
-                    an = 4'b1101;
+                    an = (digit_enable_mask[0]) ? 4'b1101 : 4'b1111;
                     current_digit = digit1;
                 end
                 // Üçüncü basamak
                 2'b10:
                 begin
-                    an = 4'b1011;
+                    an = (digit_enable_mask[0]) ? 4'b1011 : 4'b1111;
                     current_digit = digit2;
                 end
                 // Dördüncü basamak
                 2'b11:
                 begin
-                    an = 4'b0111;
+                    an = (digit_enable_mask[0]) ? 4'b0111 : 4'b1111;
                     current_digit = digit3;
                 end
             endcase

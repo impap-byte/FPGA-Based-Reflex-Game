@@ -1,16 +1,22 @@
 `timescale 1ns / 1ps
 
-module timer(
+module wait_manager(
     input             clk,
     input             rst,
     input             start_wait, // BTNC'ye basilinca bekleme suresini baslatmak icin
-    input             start_reaction, // Ekran sonunce reaksiyon zamanini baslatmak icin
-    input [12:0]      wait_ms, 
-    output reg        wait_done,
-    output [12:0]     reaction_time,
-    output reg        timeout // Reaksiyon suresi bitince
+    input             hardmode, 
+    output reg        wait_done
     );
-
+    
+    wire wait_ms;
+    random_time rnd(
+    .clk(clk),
+    .rst(rst),
+    .hardmode(hardmode),
+    .wait_ms(wait_ms) // timer'a gidecek milisaniye degeri, max sure 5000 ms oldugundan oturu 13 bit araliginda
+    );
+    
+    
     // Clock sinyali saniyede 100 milyon kez atildigi icin once 1 ms cozunurlukte olculmeli.
     reg [16:0] prescaler_count; // 0-99999 sayaci icin en az 17 bit gerekli.
     wire       ms_tick;
@@ -27,6 +33,7 @@ module timer(
             prescaler_count <= prescaler_count + 1'b1;
         end
     end 
+    
     
     
     reg [12:0] target_wait_ms; // wait_ms'in anlik degerinin kaydedilmesi icin
@@ -57,30 +64,4 @@ module timer(
         end
     end
     
-    reg [12:0] reaction_count; // 0-5000 ms arasý sayacak kronometre
-    reg        reaction_active;
-    
-    assign reaction_time = reaction_count;
-    
-    always @(posedge clk) begin
-        if (rst) begin
-            reaction_count  <= 13'd0;
-            reaction_active <= 1'b0;
-            timeout         <= 1'b0;
-        end else begin
-            timeout <= 1'b0; 
-            
-            if (start_reaction) begin
-                reaction_count  <= 13'd0;
-                reaction_active <= 1'b1; // Sayma baslar.
-            end else if (reaction_active && ms_tick) begin
-                if (reaction_count >= 13'd5000) begin // 5000 ms olup olmadiginin kontrolu
-                    reaction_active <= 1'b0;
-                    timeout         <= 1'b1;
-                end else begin
-                    reaction_count <= reaction_count + 1'b1;
-                end
-            end
-        end
-    end
 endmodule

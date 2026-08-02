@@ -60,6 +60,8 @@ always @(*) begin
             next_state = DISPLAY_SEQUENCE;
     end
     DISPLAY_SEQUENCE:
+    
+    
     begin
         if(seq_done)
             next_state = RANDOM_WAIT;
