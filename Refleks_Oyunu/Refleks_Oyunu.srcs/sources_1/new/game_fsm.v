@@ -10,7 +10,7 @@ module game_fsm(
     input reaction_done,
     input uart_done,
     input last_round,
-    output reg start_sequence,
+    input game_over_early,
     output reg start_wait,
     output reg start_reaction,
     output reg calc_score,
@@ -91,7 +91,7 @@ always @(*) begin
     end
     NEXT_ROUND:
     begin
-        if(last_round)
+        if(last_round || game_over_early)
             next_state = GAME_FINISH;
         else
             next_state = WAIT_START;
@@ -105,7 +105,6 @@ always @(*) begin
     endcase
 end
 always @(*) begin
-    start_sequence = 0;
     start_wait = 0;
     start_reaction = 0;
     calc_score = 0;
@@ -124,7 +123,6 @@ always @(*) begin
     DISPLAY_SEQUENCE:
     begin
         display_enable = 1;
-        start_sequence = 1;
     end
     RANDOM_WAIT:
     begin

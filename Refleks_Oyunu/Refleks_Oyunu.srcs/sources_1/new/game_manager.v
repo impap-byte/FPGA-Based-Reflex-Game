@@ -10,16 +10,20 @@ module game_manager(
     input btnR,
     input btnL,
     input [1:0] player_count,
-    input p1_active,
-    input p2_active,
-    input p3_active,
-    input p4_active,
+
     input hardmode,
+    input elimination,
     output uart_data, // Will be connected to uart_tx module later
     input [3:0] max_round,
     output [6:0] seg,  
     output [3:0] an
 );
+    
+    reg p1_active;
+    reg p2_active;
+    reg p3_active;
+    reg p4_active;
+
     
     wire game_over;
     wire display_enable;
@@ -31,7 +35,6 @@ module game_manager(
     wire p1_pulse, p2_pulse, p3_pulse, p4_pulse;
     wire [3:0] fsm_state;
     
-    reg last_round;
     reg p1_false_start, p2_false_start, p3_false_start, p4_false_start;
     
     // --- INTERNAL WIRES FOR REACTION TIMER & SCORE MANAGER ---
@@ -42,11 +45,15 @@ module game_manager(
     // Validity signals for the score manager (Player must be active and not have false started)
     wire p1_valid = p1_active && !p1_false_start;
     wire p2_valid = p2_active && !p2_false_start;
-    wire p3_valid = p3_active && !p3_false_start && player_count != 2'b01;
-    wire p4_valid = p4_active && !p4_false_start && player_count != 2'b01 && player_count != 2'b11;
+    wire p3_valid = p3_active && !p3_false_start;
+    wire p4_valid = p4_active && !p4_false_start;
 
     wire [1:0] p1_rank, p2_rank, p3_rank, p4_rank;
     wire [6:0] p1_total_score, p2_total_score, p3_total_score, p4_total_score;
+    
+    
+    wire [2:0] active_count = p1_active + p2_active + p3_active + p4_active;
+    wire game_over_early = elimination && (active_count <= 1);
     
     wait_manager wait_man(
         .clk(clk),
@@ -72,26 +79,7 @@ module game_manager(
     
     wire calculate_enable;
 
-    game_fsm fsm(
-        .clk(clk),
-        .rst(rst),
-        .btnC(btnC),
-        .config_done(config_done),
-        .seq_done(seq_done),
-        .wait_done(wait_done),
-        .reaction_done(reaction_done),
-        .uart_done(1'b1), // TEMPORARY: Tied to 1 so FSM doesn't get stuck waiting for UART
-        .last_round(last_round),
-        
-        .start_sequence(), // redundant
-        .start_wait(start_wait),
-        .start_reaction(start_reaction),
-        .calc_score(calculate_enable),
-        .uart_start(),
-        .display_enable(display_enable),
-        .game_over(game_over),
-        .state_out(fsm_state)
-    );
+    
     
     reaction_timer rt(
         .clk(clk),
@@ -175,14 +163,31 @@ module game_manager(
         .an(an) 
     );
     
-    localparam NEXT_ROUND = 4'd9;
+    always @(*) begin
+        if(elimination) begin
+            if(p1_false_start || p1_timeout) begin
+                p1_active = 0;
+            end
+            if(p2_false_start || p2_timeout) begin
+                p2_active = 0;
+            end
+            if(p3_false_start || p3_timeout) begin
+                p3_active = 0;
+            end
+            if(p4_false_start || p4_timeout) begin
+                p4_active = 0;
+            end
+        end
     
+    end
+    
+    localparam NEXT_ROUND = 4'd9;
+    wire last_round = (round_count == max_round);
     always @(posedge clk) begin
-        last_round <= 0;
-        round_count <= round_count;
-        if(fsm_state == NEXT_ROUND) begin
+        if (rst) begin
+            round_count <= 4'd0;
+        end else if (fsm_state == NEXT_ROUND) begin
             round_count <= round_count + 1'b1;
-            if(round_count == max_round) last_round <= 1'b1;
         end
     end
     
@@ -205,4 +210,39 @@ module game_manager(
             if (p4_pulse && p4_active) p4_false_start <= 1;
         end
     end
+    
+    always @(posedge clk) begin
+        if (rst) begin
+            p1_active <= 1'b1;
+            p2_active <= 1'b1;
+            p3_active <= (player_count == 2'b00) ? 0 : 1;
+            p4_active <= (player_count != 2'b10) ? 0 : 1;
+        end 
+        else if (fsm_state == NEXT_ROUND && elimination) begin
+            if (p1_false_start || p1_timeout) p1_active <= 1'b0;
+            if (p2_false_start || p2_timeout) p2_active <= 1'b0;
+            if (p3_false_start || p3_timeout) p3_active <= 1'b0;
+            if (p4_false_start || p4_timeout) p4_active <= 1'b0;
+        end
+    end
+    
+    game_fsm fsm(
+        .clk(clk),
+        .rst(rst),
+        .btnC(btnC),
+        .config_done(config_done),
+        .seq_done(seq_done),
+        .wait_done(wait_done),
+        .reaction_done(reaction_done),
+        .uart_done(1'b1), // TEMPORARY: Tied to 1 so FSM doesn't get stuck waiting for UART
+        .last_round(last_round),
+        .game_over_early(game_over_early),
+        .start_wait(start_wait),
+        .start_reaction(start_reaction),
+        .calc_score(calculate_enable),
+        .uart_start(),
+        .display_enable(display_enable),
+        .game_over(game_over),
+        .state_out(fsm_state)
+    );
 endmodule

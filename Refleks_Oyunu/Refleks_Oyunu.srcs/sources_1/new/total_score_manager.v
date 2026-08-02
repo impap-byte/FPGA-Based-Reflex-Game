@@ -28,6 +28,7 @@ module total_score_manager(
             p2_points_n = p2_points + score_p2;
             p3_points_n = p3_points + score_p3;
             p4_points_n = p4_points + score_p4;
+            
         end
     end
     
@@ -37,12 +38,14 @@ module total_score_manager(
             p2_points <= 0;
             p3_points <= 0;
             p4_points <= 0;
+            
         end
         else begin
             p1_points <= p1_points_n;
             p2_points <= p2_points_n;
             p3_points <= p3_points_n;
             p4_points <= p4_points_n;
+            
         end
     end
 endmodule
