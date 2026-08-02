@@ -1,7 +1,7 @@
 module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
     input clk,
     input rst,
-    input [2:0] round_count,
+    input [3:0] round_count,
     input display_enable,
     output reg done,
     output [6:0] seg,  // Pass-through to physical pins
