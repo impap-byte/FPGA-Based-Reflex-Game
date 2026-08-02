@@ -182,7 +182,7 @@ module game_manager(
         round_count <= round_count;
         if(fsm_state == NEXT_ROUND) begin
             round_count <= round_count + 1'b1;
-            if(round_count == max_round - 1) last_round <= 1'b1;
+            if(round_count == max_round) last_round <= 1'b1;
         end
     end
     
