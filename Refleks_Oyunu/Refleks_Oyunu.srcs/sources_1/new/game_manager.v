@@ -16,7 +16,8 @@ module game_manager(
     output uart_data, // Will be connected to uart_tx module later
     input [3:0] max_round,
     output [6:0] seg,  
-    output [3:0] an
+    output [3:0] an,
+    output [15:0] led
 );
     
     reg p1_active;
@@ -54,6 +55,8 @@ module game_manager(
     
     wire [2:0] active_count = p1_active + p2_active + p3_active + p4_active;
     wire game_over_early = elimination && (active_count <= 1);
+    
+    wire [1:0] p1_frank, p2_frank, p3_frank, p4_frank;
     
     wait_manager wait_man(
         .clk(clk),
@@ -148,7 +151,31 @@ module game_manager(
         .total_score_p1(p1_total_score),
         .total_score_p2(p2_total_score),
         .total_score_p3(p3_total_score),
-        .total_score_p4(p4_total_score)
+        .total_score_p4(p4_total_score),
+        
+        .f_rank_p1(p1_frank),
+        .f_rank_p2(p2_frank),
+        .f_rank_p3(p3_frank),
+        .f_rank_p4(p4_frank)
+    );
+    
+    led_manager led_mgr(
+    .clk(clk),
+    .rst(rst),
+    .game_over(game_over),
+    .score_p1(p1_score),
+    .score_p2(p2_score),
+    .score_p3(p3_score),
+    .score_p4(p4_score),
+    .f_rank_p1(p1_frank),
+    .f_rank_p2(p2_frank),
+    .f_rank_p3(p3_frank),
+    .f_rank_p4(p4_frank),
+    .active_p1(p1_active),
+    .active_p2(p2_active),
+    .active_p3(p3_active),
+    .active_p4(p4_active),
+    .led(led)
     );
     
     reg[3:0] round_count = 0;
@@ -162,24 +189,6 @@ module game_manager(
         .seg(seg), 
         .an(an) 
     );
-    
-    always @(*) begin
-        if(elimination) begin
-            if(p1_false_start || p1_timeout) begin
-                p1_active = 0;
-            end
-            if(p2_false_start || p2_timeout) begin
-                p2_active = 0;
-            end
-            if(p3_false_start || p3_timeout) begin
-                p3_active = 0;
-            end
-            if(p4_false_start || p4_timeout) begin
-                p4_active = 0;
-            end
-        end
-    
-    end
     
     localparam NEXT_ROUND = 4'd9;
     wire last_round = (round_count == max_round);

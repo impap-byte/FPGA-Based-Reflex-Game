@@ -10,7 +10,7 @@ module top (
     input reset,
     input [8:0] sw,
     output tx,        // UART TX Ç?k??? (Bilgisayara giden hat)
-    output led0,         // tx_done sinyalini görmek için
+    output [15:0] led,       // tx_done sinyalini görmek için
     // 7 segment
     output [6:0] seg,  // Pass-through to physical pins
     output [3:0] an    // Pass-through to physical pins
@@ -56,7 +56,8 @@ module top (
         .max_round(max_round),
         .elimination(elimination),
         .seg(seg),
-        .an(an)
+        .an(an),
+        .led(led)
 );
  
     
