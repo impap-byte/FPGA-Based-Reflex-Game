@@ -3,6 +3,7 @@
 module configuration(
     input clk,
     input rst,
+    input btnC,
     input [8:0] sw,       // Raw switches from Basys3
     
     output reg [1:0] player_count,
@@ -11,8 +12,10 @@ module configuration(
     output reg elimination, // Added the elimination output
     output reg config_done
 );
-    
-    wire confirm = sw[0];
+    wire debounced, confirm;
+    button_debounce db(clk, rst, btnC, debounced);
+    edge_detector ed(clk, rst, debounced, confirm);
+
     wire [1:0] p_count = sw[2:1];
     wire [3:0] rounds = sw[6:3]; 
     wire elim = sw[7];

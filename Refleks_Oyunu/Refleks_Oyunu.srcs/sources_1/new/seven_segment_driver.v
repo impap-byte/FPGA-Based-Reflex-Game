@@ -52,19 +52,19 @@ module seven_segment_driver(
                 // İkinci basamak
                 2'b01:
                 begin
-                    an = (digit_enable_mask[0]) ? 4'b1101 : 4'b1111;
+                    an = (digit_enable_mask[1]) ? 4'b1101 : 4'b1111;
                     current_digit = digit1;
                 end
                 // Üçüncü basamak
                 2'b10:
                 begin
-                    an = (digit_enable_mask[0]) ? 4'b1011 : 4'b1111;
+                    an = (digit_enable_mask[2]) ? 4'b1011 : 4'b1111;
                     current_digit = digit2;
                 end
                 // Dördüncü basamak
                 2'b11:
                 begin
-                    an = (digit_enable_mask[0]) ? 4'b0111 : 4'b1111;
+                    an = (digit_enable_mask[3]) ? 4'b0111 : 4'b1111;
                     current_digit = digit3;
                 end
             endcase

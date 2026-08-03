@@ -10,23 +10,34 @@ module game_manager(
     input btnR,
     input btnL,
     input [1:0] player_count,
-
+    
     input hardmode,
     input elimination,
-    output uart_data, // Will be connected to uart_tx module later
     input [3:0] max_round,
+    
+    output uart_start,
+    input  uart_done,
+
+    output reg [3:0] current_round,
+    output [12:0] p1_time, p2_time, p3_time, p4_time,
+    output [2:0]  p1_score, p2_score, p3_score, p4_score,
+    output [6:0]  p1_total, p2_total, p3_total, p4_total,
+    output [1:0]  f_rank_p1, f_rank_p2, f_rank_p3, f_rank_p4,
+    
+    output reg p1_fs, p2_fs, p3_fs, p4_fs,
+    output p1_to, p2_to, p3_to, p4_to,
+    output reg p1_active, p2_active, p3_active, p4_active,
+    
     output [6:0] seg,  
     output [3:0] an,
-    output [15:0] led
+    output [15:0] led,
+    output game_over
 );
     
-    reg p1_active;
-    reg p2_active;
-    reg p3_active;
-    reg p4_active;
-
+    wire btnC_clean, btnC_pulse;
+    button_debounce dbC(clk, rst, btnC, btnC_clean);
+    edge_detector edC(clk, rst, btnC_clean, btnC_pulse);
     
-    wire game_over;
     wire display_enable;
     wire reaction_done;
     wire seq_done;
@@ -35,28 +46,16 @@ module game_manager(
     wire start_reaction;
     wire p1_pulse, p2_pulse, p3_pulse, p4_pulse;
     wire [3:0] fsm_state;
-    
-    reg p1_false_start, p2_false_start, p3_false_start, p4_false_start;
-    
-    // --- INTERNAL WIRES FOR REACTION TIMER & SCORE MANAGER ---
-    wire [12:0] p1_time, p2_time, p3_time, p4_time;
-    wire p1_timeout, p2_timeout, p3_timeout, p4_timeout;
-    wire [6:0] p1_score, p2_score, p3_score, p4_score;
-    
-    // Validity signals for the score manager (Player must be active and not have false started)
-    wire p1_valid = p1_active && !p1_false_start;
-    wire p2_valid = p2_active && !p2_false_start;
-    wire p3_valid = p3_active && !p3_false_start;
-    wire p4_valid = p4_active && !p4_false_start;
+
+    wire p1_valid = p1_active && !p1_fs;
+    wire p2_valid = p2_active && !p2_fs;
+    wire p3_valid = p3_active && !p3_fs;
+    wire p4_valid = p4_active && !p4_fs;
 
     wire [1:0] p1_rank, p2_rank, p3_rank, p4_rank;
-    wire [6:0] p1_total_score, p2_total_score, p3_total_score, p4_total_score;
-    
     
     wire [2:0] active_count = p1_active + p2_active + p3_active + p4_active;
     wire game_over_early = elimination && (active_count <= 1);
-    
-    wire [1:0] p1_frank, p2_frank, p3_frank, p4_frank;
     
     wait_manager wait_man(
         .clk(clk),
@@ -82,13 +81,11 @@ module game_manager(
     
     wire calculate_enable;
 
-    
-    
     reaction_timer rt(
         .clk(clk),
         .rst(rst),
         .start(start_reaction),
-        .active_p1(p1_valid), // Only allow press if they didn't false start
+        .active_p1(p1_valid), 
         .active_p2(p2_valid),
         .active_p3(p3_valid),
         .active_p4(p4_valid),
@@ -98,17 +95,15 @@ module game_manager(
         .p3_btn(p3_pulse),
         .p4_btn(p4_pulse),
     
-        // Connected to internal wires
         .p1_time(p1_time),
         .p2_time(p2_time),
         .p3_time(p3_time),
         .p4_time(p4_time),
     
-        // Connected to internal wires
-        .p1_timeout(p1_timeout),
-        .p2_timeout(p2_timeout),
-        .p3_timeout(p3_timeout),
-        .p4_timeout(p4_timeout),
+        .p1_timeout(p1_to),
+        .p2_timeout(p2_to),
+        .p3_timeout(p3_to),
+        .p4_timeout(p4_to),
     
         .done(reaction_done)
     );
@@ -122,68 +117,59 @@ module game_manager(
         .rt_p2(p2_time),
         .rt_p3(p3_time),
         .rt_p4(p4_time),
-        
-        .fs_p1(p1_false_start),
-        .fs_p2(p2_false_start),
-        .fs_p3(p3_false_start),
-        .fs_p4(p4_false_start),
-        
-        .to_p1(p1_timeout),
-        .to_p2(p2_timeout),
-        .to_p3(p3_timeout),
-        .to_p4(p4_timeout),
-        
+        .fs_p1(p1_fs),
+        .fs_p2(p2_fs),
+        .fs_p3(p3_fs),
+        .fs_p4(p4_fs),
+        .to_p1(p1_to),
+        .to_p2(p2_to),
+        .to_p3(p3_to),
+        .to_p4(p4_to),       
         .active_p1(p1_valid),
         .active_p2(p2_valid),
         .active_p3(p3_valid),
-        .active_p4(p4_valid),
-        
+        .active_p4(p4_valid),  
+        .score_p1(p1_score),
+        .score_p2(p2_score),
+        .score_p3(p3_score),
+        .score_p4(p4_score),  
+        .rank_p1(p1_rank),
+        .rank_p2(p2_rank),
+        .rank_p3(p3_rank),
+        .rank_p4(p4_rank),    
+        .total_score_p1(p1_total),
+        .total_score_p2(p2_total),
+        .total_score_p3(p3_total),
+        .total_score_p4(p4_total),   
+        .f_rank_p1(f_rank_p1),
+        .f_rank_p2(f_rank_p2),
+        .f_rank_p3(f_rank_p3),
+        .f_rank_p4(f_rank_p4)
+    );
+    
+    led_manager led_mgr(
+        .clk(clk),
+        .rst(rst),
+        .game_over(game_over),
         .score_p1(p1_score),
         .score_p2(p2_score),
         .score_p3(p3_score),
         .score_p4(p4_score),
-        
-        .rank_p1(p1_rank),
-        .rank_p2(p2_rank),
-        .rank_p3(p3_rank),
-        .rank_p4(p4_rank),
-        
-        .total_score_p1(p1_total_score),
-        .total_score_p2(p2_total_score),
-        .total_score_p3(p3_total_score),
-        .total_score_p4(p4_total_score),
-        
-        .f_rank_p1(p1_frank),
-        .f_rank_p2(p2_frank),
-        .f_rank_p3(p3_frank),
-        .f_rank_p4(p4_frank)
+        .f_rank_p1(f_rank_p1),
+        .f_rank_p2(f_rank_p2),
+        .f_rank_p3(f_rank_p3),
+        .f_rank_p4(f_rank_p4),
+        .active_p1(p1_active),
+        .active_p2(p2_active),
+        .active_p3(p3_active),
+        .active_p4(p4_active),
+        .led(led)
     );
-    
-    led_manager led_mgr(
-    .clk(clk),
-    .rst(rst),
-    .game_over(game_over),
-    .score_p1(p1_score),
-    .score_p2(p2_score),
-    .score_p3(p3_score),
-    .score_p4(p4_score),
-    .f_rank_p1(p1_frank),
-    .f_rank_p2(p2_frank),
-    .f_rank_p3(p3_frank),
-    .f_rank_p4(p4_frank),
-    .active_p1(p1_active),
-    .active_p2(p2_active),
-    .active_p3(p3_active),
-    .active_p4(p4_active),
-    .led(led)
-    );
-    
-    reg[3:0] round_count = 0;
     
     seven_segment_manager seven_segment(
         .clk(clk),
         .rst(rst),
-        .round_count(round_count), 
+        .round_count(current_round), 
         .display_enable(display_enable),
         .done(seq_done),
         .seg(seg), 
@@ -191,12 +177,13 @@ module game_manager(
     );
     
     localparam NEXT_ROUND = 4'd9;
-    wire last_round = (round_count == max_round);
+    wire last_round = (current_round == max_round);
+    
     always @(posedge clk) begin
         if (rst) begin
-            round_count <= 4'd0;
+            current_round <= 4'd0;
         end else if (fsm_state == NEXT_ROUND) begin
-            round_count <= round_count + 1'b1;
+            current_round <= current_round + 1'b1;
         end
     end
     
@@ -208,15 +195,15 @@ module game_manager(
     
     always @(posedge clk) begin
         if (rst || fsm_state == WAIT_START) begin 
-            p1_false_start <= 0;
-            p2_false_start <= 0;
-            p3_false_start <= 0;
-            p4_false_start <= 0;
+            p1_fs <= 0;
+            p2_fs <= 0;
+            p3_fs <= 0;
+            p4_fs <= 0;
         end else if (in_early_zone) begin
-            if (p1_pulse && p1_active) p1_false_start <= 1;
-            if (p2_pulse && p2_active) p2_false_start <= 1;
-            if (p3_pulse && p3_active) p3_false_start <= 1;
-            if (p4_pulse && p4_active) p4_false_start <= 1;
+            if (p1_pulse && p1_active) p1_fs <= 1;
+            if (p2_pulse && p2_active) p2_fs <= 1;
+            if (p3_pulse && p3_active) p3_fs <= 1;
+            if (p4_pulse && p4_active) p4_fs <= 1;
         end
     end
     
@@ -228,28 +215,28 @@ module game_manager(
             p4_active <= (player_count != 2'b10) ? 0 : 1;
         end 
         else if (fsm_state == NEXT_ROUND && elimination) begin
-            if (p1_false_start || p1_timeout) p1_active <= 1'b0;
-            if (p2_false_start || p2_timeout) p2_active <= 1'b0;
-            if (p3_false_start || p3_timeout) p3_active <= 1'b0;
-            if (p4_false_start || p4_timeout) p4_active <= 1'b0;
+            if (p1_fs || p1_to) p1_active <= 1'b0;
+            if (p2_fs || p2_to) p2_active <= 1'b0;
+            if (p3_fs || p3_to) p3_active <= 1'b0;
+            if (p4_fs || p4_to) p4_active <= 1'b0;
         end
     end
     
     game_fsm fsm(
         .clk(clk),
         .rst(rst),
-        .btnC(btnC),
+        .btnC(btnC_pulse),
         .config_done(config_done),
         .seq_done(seq_done),
         .wait_done(wait_done),
         .reaction_done(reaction_done),
-        .uart_done(1'b1), // TEMPORARY: Tied to 1 so FSM doesn't get stuck waiting for UART
+        .uart_done(uart_done),
         .last_round(last_round),
         .game_over_early(game_over_early),
         .start_wait(start_wait),
         .start_reaction(start_reaction),
         .calc_score(calculate_enable),
-        .uart_start(),
+        .uart_start(uart_start),
         .display_enable(display_enable),
         .game_over(game_over),
         .state_out(fsm_state)

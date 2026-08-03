@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
     input clk,
     input rst,
@@ -32,6 +34,7 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
     localparam SECOND = 3'd2;
     localparam THIRD  = 3'd3;
     localparam FOURTH = 3'd4;
+    localparam FIFTH  = 3'd5; // Added to prevent the logic lockup
     
     reg [2:0] state;
     reg [31:0] counter;
@@ -41,7 +44,13 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
             state <= IDLE;
             counter <= 0;
             done <= 0;
-            digit_enable <= 4'b0000; // All displays OFF
+            digit_enable <= 4'b0000;
+            
+            // Initialize digits so they don't display '0' randomly before assignment
+            digit0 <= 4'hF; // Assuming your driver turns 4'hF into a blank display
+            digit1 <= 4'hF; 
+            digit2 <= 4'hF;
+            digit3 <= 4'hF;
         end else if (display_enable) begin
             
             if (counter == DIGIT_WAIT_TIME - 1) begin
@@ -53,35 +62,37 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
                     end
                     FIRST: begin
                         digit0 <= (even_odd * 4) + 1;
-                        digit_enable <= 4'b0001; // Turn on first digit
+                        digit_enable <= 4'b0001; 
                         state <= SECOND;
                     end
                     SECOND: begin
                         digit1 <= (even_odd * 4) + 2;
-                        digit_enable <= 4'b0011; // Turn on first two
+                        digit_enable <= 4'b0011; 
                         state <= THIRD;
                     end
                     THIRD: begin
                         digit2 <= (even_odd * 4) + 3;
-                        digit_enable <= 4'b0111; // Turn on first three
+                        digit_enable <= 4'b0111; 
                         state <= FOURTH;
                     end
                     FOURTH: begin
                         digit3 <= (even_odd * 4) + 4;
-                        digit_enable <= 4'b1111; // Turn on all four
-                        done <= 1'b1;            // Signal the FSM that sequence is complete
-                        // Stay in FOURTH state until display_enable drops
+                        digit_enable <= 4'b1111; 
+                        state <= FIFTH;
+                    end
+                    FIFTH: begin
+                        done <= 1'b1; // Sequence is fully visible, signal FSM to proceed           
                     end
                 endcase
             end else begin
-                // Only increment counter if we haven't reached the FOURTH state
-                if (state != FOURTH) begin
+                // FIX: Only freeze the counter when we reach the absolute end
+                if (state != FIFTH) begin
                     counter <= counter + 1;
                 end
             end
             
         end else begin
-            // Reset everything when display_enable is low
+            // Reset everything when display_enable drops
             state <= IDLE;
             counter <= 0;
             done <= 0;
