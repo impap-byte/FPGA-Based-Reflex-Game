@@ -115,10 +115,10 @@ module game_fsm(
         
         case(state)
             CONFIG: begin
-                display_enable = 1;
+                display_enable = 0;
             end
             WAIT_START: begin
-                display_enable = 1;
+                display_enable = 0;
             end
             DISPLAY_SEQUENCE: begin
                 display_enable = 1;
