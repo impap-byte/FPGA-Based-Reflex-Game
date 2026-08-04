@@ -48,4 +48,9 @@ module total_score_manager(
             
         end
     end
+
+    assign total1 = p1_points;
+    assign total2 = p2_points;
+    assign total3 = p3_points;
+    assign total4 = p4_points;
 endmodule

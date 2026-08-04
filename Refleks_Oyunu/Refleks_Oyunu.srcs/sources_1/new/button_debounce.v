@@ -8,7 +8,7 @@ module button_debounce #(parameter DEBOUNCE_LIMIT = 1000000)( // 10 ms bekleme s
 );
     
     reg [1:0] sync_reg;
-    reg [19:0] counter; 
+    reg [19:0] counter = 0; 
     
     // D Flip-Flop zinciri, asenkron buton sinyali clk ile senkronize ediliyor
     always @(posedge clk) begin

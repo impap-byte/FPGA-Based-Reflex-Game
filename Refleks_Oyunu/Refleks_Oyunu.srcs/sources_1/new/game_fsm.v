@@ -55,7 +55,7 @@ module game_fsm(
                 if(!rst) next_state = CONFIG;
             end
             CONFIG: begin
-                if(config_done) next_state = WAIT_START;
+                if(config_done) next_state = DISPLAY_SEQUENCE;  // WAIT_START yerine direkt buraya
             end
             WAIT_START: begin
                 if(btnC) next_state = DISPLAY_SEQUENCE;

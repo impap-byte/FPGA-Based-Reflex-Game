@@ -8,7 +8,7 @@ module wait_manager(
     output reg        wait_done
     );
     
-    wire wait_ms;
+    wire [12:0] wait_ms;
     random_time rnd(
     .clk(clk),
     .rst(rst),
@@ -37,7 +37,7 @@ module wait_manager(
     
     
     reg [12:0] target_wait_ms; // wait_ms'in anlik degerinin kaydedilmesi icin
-    reg [12:0] wait_count; // Anlik sayýlan ms
+    reg [12:0] wait_count; // Anlik say?lan ms
     reg        wait_active; // Bekleme sayacinin durumu
     
     always @(posedge clk) begin
@@ -49,7 +49,7 @@ module wait_manager(
         end else begin
             wait_done <= 1'b0;
             
-            if (start_wait) begin // FSM'den gelen emir
+            if (start_wait && !wait_active) begin // FSM'den gelen emir (sadece henuz baslamamissa yukle)
                 target_wait_ms <= wait_ms; // O anki ms degeri
                 wait_count     <= 13'd0;   // Sayaci sifirlar
                 wait_active    <= 1'b1;    // Saymayi aktiflestirir

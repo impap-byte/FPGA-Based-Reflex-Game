@@ -52,8 +52,12 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
             digit2 <= 4'hF;
             digit3 <= 4'hF;
         end else if (display_enable) begin
-            
-            if (counter == DIGIT_WAIT_TIME - 1) begin
+
+            if (state == FIFTH) begin
+                // Sequence is fully visible: latch done high and stay here.
+                // (Counter is irrelevant now, so it's never checked/incremented again.)
+                done <= 1'b1;
+            end else if (counter == DIGIT_WAIT_TIME - 1) begin
                 counter <= 0;
                 
                 case (state)
@@ -80,15 +84,9 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
                         digit_enable <= 4'b1111; 
                         state <= FIFTH;
                     end
-                    FIFTH: begin
-                        done <= 1'b1; // Sequence is fully visible, signal FSM to proceed           
-                    end
                 endcase
             end else begin
-                // FIX: Only freeze the counter when we reach the absolute end
-                if (state != FIFTH) begin
-                    counter <= counter + 1;
-                end
+                counter <= counter + 1;
             end
             
         end else begin
