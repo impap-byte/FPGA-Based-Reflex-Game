@@ -17,9 +17,10 @@ module game_fsm(
     output reg uart_start,
     output reg display_enable,
     output reg game_over,
-    output reg [3:0] state_out
+    output reg [3:0] state_out,
+    output reg [3:0] state_prev
 );
-
+    
     localparam RESET_STATE      = 4'd0;
     localparam CONFIG           = 4'd1;
     localparam WAIT_START       = 4'd2;
@@ -42,10 +43,14 @@ module game_fsm(
     reg [3:0] next_state;
 
     always @(posedge clk) begin
-        if(rst)
+        if(rst) begin
             state <= RESET_STATE;
-        else
+            state_prev <= RESET_STATE;
+        end
+        else begin
             state <= next_state;
+            state_prev <= state;
+        end
     end
 
     always @(*) begin
@@ -55,7 +60,7 @@ module game_fsm(
                 if(!rst) next_state = CONFIG;
             end
             CONFIG: begin
-                if(config_done) next_state = DISPLAY_SEQUENCE;  // WAIT_START yerine direkt buraya
+                if(config_done) next_state = DISPLAY_SEQUENCE;
             end
             WAIT_START: begin
                 if(btnC) next_state = DISPLAY_SEQUENCE;
@@ -73,38 +78,38 @@ module game_fsm(
                 if(reaction_done) next_state = SCORE;
             end
             SCORE: begin
-                next_state = UART_ROUND_PULSE; // Go to pulse state
+                next_state = UART_ROUND_PULSE;
             end
             
             UART_ROUND_PULSE: begin
-                next_state = UART_ROUND_WAIT;  // Immediately move to wait state (1 cycle later)
+                next_state = UART_ROUND_WAIT; 
             end
             UART_ROUND_WAIT: begin
-                if(uart_done) next_state = NEXT_ROUND; // Wait for UART to finish
+                if(uart_done) next_state = NEXT_ROUND; 
             end
             
             NEXT_ROUND: begin
                 if(last_round || game_over_early)
-                    next_state = UART_OVER_PULSE; // Trigger final print
+                    next_state = UART_OVER_PULSE;
                 else
                     next_state = WAIT_START;
             end
             
             UART_OVER_PULSE: begin
-                next_state = UART_OVER_WAIT; // Immediately move to wait state
+                next_state = UART_OVER_WAIT; 
             end
             UART_OVER_WAIT: begin
                 if(uart_done) next_state = GAME_FINISH; // Wait for final print to finish
             end
             
             GAME_FINISH: begin
-                next_state = GAME_FINISH; // Lock up here safely
+                next_state = GAME_FINISH; 
             end
             default: next_state = RESET_STATE;
         endcase
     end
 
-    // --- Output Logic ---
+    //Outputlar
     always @(*) begin
         start_wait = 0;
         start_reaction = 0;
@@ -138,19 +143,18 @@ module game_fsm(
                 calc_score = 1;
             end
             
-            // Generate a strict 1-cycle pulse for uart_start
             UART_ROUND_PULSE: begin
                 uart_start = 1; 
             end
             // In the WAIT state, uart_start drops to 0 automatically
             
-            // Same for the Game Over print, but ensure game_over is High!
+            // Same for the Game Over print, but ensure game_over is High!..
             UART_OVER_PULSE: begin
                 uart_start = 1;
                 game_over = 1;
             end
             UART_OVER_WAIT: begin
-                game_over = 1; // Keep the multiplexer pointed at the end_char string
+                game_over = 1; 
             end
             
             GAME_FINISH: begin

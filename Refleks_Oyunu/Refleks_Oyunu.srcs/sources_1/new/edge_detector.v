@@ -3,7 +3,7 @@
 module edge_detector (
     input clk,
     input rst,
-    input in_signal, // Button_Debounce'dan gelir
+    input in_signal, // Button_debounce'dan gelir
     output reg pulse_out
 );
 
@@ -17,7 +17,7 @@ module edge_detector (
         end else begin
             in_signal_prev <= in_signal; // Bir sonraki cycle icin kaydedilir
             
-            pulse_out <= in_signal && !in_signal_prev; // Pulse uretimi
+            pulse_out <= in_signal && !in_signal_prev; 
         end
     end
 

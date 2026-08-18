@@ -4,9 +4,9 @@ module uart_stream_manager(
     input clk,
     input rst,
 
-    input        start_print,   // game_fsm.uart_start (1 cycle pulse)
-    input          game_over,   // game_fsm indicates the game is finished
-    input [3:0]    round_num,     // round_count (0-tabanli)
+    input        start_print,   // game_fsm.uart_start
+    input          game_over,   // game_fsm'den oyunun bittigini soyleyen sinyal
+    input [3:0]    round_num,     // round_count (0 tabanli)
     input [1:0]  player_count,  // 00->2, 01->3, 10->4 oyuncu
 
     input [12:0] p1_time, p2_time, p3_time, p4_time,
@@ -39,6 +39,14 @@ module uart_stream_manager(
     bcd_converter conv_s2 ({6'd0, p2_total}, p2_total_bcd);
     bcd_converter conv_s3 ({6'd0, p3_total}, p3_total_bcd);
     bcd_converter conv_s4 ({6'd0, p4_total}, p4_total_bcd);
+
+    // Kac kisinin kazandigi sayilmaktadir
+    wire [2:0] winner_count = ((f_rank_p1 == 2'd0 && p1_active) ? 1 : 0) +
+                              ((f_rank_p2 == 2'd0 && p2_active) ? 1 : 0) +
+                              ((f_rank_p3 == 2'd0 && p3_active) ? 1 : 0) +
+                              ((f_rank_p4 == 2'd0 && p4_active) ? 1 : 0);
+    wire draw = (winner_count > 1);
+
     
 
     localparam IDLE      = 2'b00;
@@ -119,7 +127,7 @@ module uart_stream_manager(
             7'd32: round_char = "2";
             7'd33: round_char = ":";
             7'd34: begin 
-                if      (!p2_active) round_char = "N";
+                if(!p2_active) round_char = "N";
                 else if (p2_fs)      round_char = "F";
                 else if (p2_to)      round_char = "T";
                 else                 round_char = "0" + p2_time_bcd[15:12];
@@ -279,9 +287,16 @@ module uart_stream_manager(
             7'd16: end_char = " ";
             7'd17: end_char = (f_rank_p4 == 2'd0 && p4_active) ? "4" : " ";
             
-            7'd18: end_char = 8'h0D;
-            7'd19: end_char = 8'h0A;
-            
+            7'd18: end_char = 8'h20;
+            7'd19: end_char = 8'h20;
+          
+            7'd20: end_char = draw ? "D" : " ";
+            7'd21: end_char = draw ? "R" : " ";
+            7'd22: end_char = draw ? "A" : " ";
+            7'd23: end_char = draw ? "W" : " ";
+            7'd24: end_char = 8'h0D; // CR
+            7'd25: end_char =  8'h0A; // LF 
+
             default: end_char = " ";
         endcase
     end
@@ -303,7 +318,7 @@ module uart_stream_manager(
                 IDLE: begin
                     if(start_print == 1'b1) begin
                         if (game_over) begin
-                            msg_length <= 7'd20;
+                            if (draw) msg_length <= 7'd26; else msg_length <= 7'd20;
                         end else begin
                             if(player_count == 2'b00) begin
                                 msg_length <= 7'd52;

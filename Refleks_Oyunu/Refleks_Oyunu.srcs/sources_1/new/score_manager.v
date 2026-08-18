@@ -65,27 +65,27 @@ module score_manager (
     always @(*) begin
         // P1
         rank_p1 = 2'd0;
-        if (active_p2 && (rt_p2 < rt_p1)) rank_p1 = rank_p1 + 1'b1;
-        if (active_p3 && (rt_p3 < rt_p1)) rank_p1 = rank_p1 + 1'b1;
-        if (active_p4 && (rt_p4 < rt_p1)) rank_p1 = rank_p1 + 1'b1;
+        if (active_p2 && !fs_p2 && !to_p2 && (rt_p2 < rt_p1)) rank_p1 = rank_p1 + 1'b1;
+        if (active_p3 && !fs_p3 && !to_p3 && (rt_p3 < rt_p1)) rank_p1 = rank_p1 + 1'b1;
+        if (active_p4 && !fs_p4 && !to_p4 && (rt_p4 < rt_p1)) rank_p1 = rank_p1 + 1'b1;
 
         // P2
         rank_p2 = 2'd0;
-        if (active_p1 && (rt_p1 < rt_p2)) rank_p2 = rank_p2 + 1'b1;
-        if (active_p3 && (rt_p3 < rt_p2)) rank_p2 = rank_p2 + 1'b1;
-        if (active_p4 && (rt_p4 < rt_p2)) rank_p2 = rank_p2 + 1'b1;
+        if (active_p1 && !fs_p1 && !to_p1 && (rt_p1 < rt_p2)) rank_p2 = rank_p2 + 1'b1;
+        if (active_p3 && !fs_p3 && !to_p3 && (rt_p3 < rt_p2)) rank_p2 = rank_p2 + 1'b1;
+        if (active_p4 && !fs_p4 && !to_p4 && (rt_p4 < rt_p2)) rank_p2 = rank_p2 + 1'b1;
 
         // P3
         rank_p3 = 2'd0;
-        if (active_p1 && (rt_p1 < rt_p3)) rank_p3 = rank_p3 + 1'b1;
-        if (active_p2 && (rt_p2 < rt_p3)) rank_p3 = rank_p3 + 1'b1;
-        if (active_p4 && (rt_p4 < rt_p3)) rank_p3 = rank_p3 + 1'b1;
+        if (active_p1 && !fs_p1 && !to_p1 && (rt_p1 < rt_p3)) rank_p3 = rank_p3 + 1'b1;
+        if (active_p2 && !fs_p2 && !to_p2 && (rt_p2 < rt_p3)) rank_p3 = rank_p3 + 1'b1;
+        if (active_p4 && !fs_p4 && !to_p4 && (rt_p4 < rt_p3)) rank_p3 = rank_p3 + 1'b1;
 
         // P4
         rank_p4 = 2'd0;
-        if (active_p1 && (rt_p1 < rt_p4)) rank_p4 = rank_p4 + 1'b1;
-        if (active_p2 && (rt_p2 < rt_p4)) rank_p4 = rank_p4 + 1'b1;
-        if (active_p3 && (rt_p3 < rt_p4)) rank_p4 = rank_p4 + 1'b1;
+        if (active_p1 && !fs_p1 && !to_p1 && (rt_p1 < rt_p4)) rank_p4 = rank_p4 + 1'b1;
+        if (active_p2 && !fs_p2 && !to_p2 && (rt_p2 < rt_p4)) rank_p4 = rank_p4 + 1'b1;
+        if (active_p3 && !fs_p3 && !to_p3 && (rt_p3 < rt_p4)) rank_p4 = rank_p4 + 1'b1;
         
         
     end

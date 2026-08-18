@@ -5,13 +5,11 @@ module seven_segment_driver(
     input clk,
     input reset,
     input display_enable,
-    // Gösterilecek dört rakam
     input [3:0] digit0,
     input [3:0] digit1,
     input [3:0] digit2,
     input [3:0] digit3,
     input [3:0] digit_enable_mask,
-    // Basys3 7 segment çıkışları
     output reg [6:0] seg,
     output reg [3:0] an
 
@@ -34,7 +32,6 @@ module seven_segment_driver(
     reg [3:0] current_digit;
 
     always @(*) begin
-    // Eğer display kapalıysa bütün basamaklar kapanır
         if(!display_enable) begin
             an = 4'b1111;
             current_digit = 4'd0;
@@ -43,69 +40,56 @@ module seven_segment_driver(
         else begin
 
             case(active_digit)
-                // Birinci basamak
                 2'b00:
                 begin
-                    an = (digit_enable_mask[0]) ? 4'b1110 : 4'b1111;
+                    an = (digit_enable_mask[0]) ? 4'b0111 : 4'b1111;
                     current_digit = digit0;
                 end
-                // İkinci basamak
                 2'b01:
                 begin
-                    an = (digit_enable_mask[1]) ? 4'b1101 : 4'b1111;
+                    an = (digit_enable_mask[1]) ? 4'b1011 : 4'b1111;
                     current_digit = digit1;
                 end
-                // Üçüncü basamak
                 2'b10:
                 begin
-                    an = (digit_enable_mask[2]) ? 4'b1011 : 4'b1111;
+                    an = (digit_enable_mask[2]) ? 4'b1101 : 4'b1111;
                     current_digit = digit2;
                 end
-                // Dördüncü basamak
                 2'b11:
                 begin
-                    an = (digit_enable_mask[3]) ? 4'b0111 : 4'b1111;
+                    an = (digit_enable_mask[3]) ? 4'b1110 : 4'b1111;
                     current_digit = digit3;
                 end
             endcase
         end
     end
-    // 7 Segment Decoder
-    // Basys3:
-    //        a
-    //       ---
-    //    f |   | b
-    //        g
-    //    e |   | c
-    //       ---
-    //        d
+
     always @(*) begin
-        // Blackout (tüm 7-segment basamaklarının söndüğü durum)
         if(!display_enable)
             seg = 7'b1111111;
         else begin
             case(current_digit)
-                4'd0: // 0
+                4'd0:
                     seg = 7'b1000000;
-                4'd1: // 1
+                4'd1:
                     seg = 7'b1111001;                
-                4'd2: // 2
+                4'd2:
                     seg = 7'b0100100;
-                4'd3: // 3
+                4'd3:
                     seg = 7'b0110000;
-                4'd4: // 4
+                4'd4:
                     seg = 7'b0011001;
-                4'd5: // 5
+                4'd5:
                     seg = 7'b0010010;
-                4'd6: // 6
+                4'd6:
                     seg = 7'b0000010;
-                4'd7: // 7
+                4'd7:
                     seg = 7'b1111000;  
-                4'd8: // 8
+                4'd8:
                     seg = 7'b0000000;
-                4'd9: // 9
+                4'd9:
                     seg = 7'b0010000;
-                default: // Geçersiz değer
+                default:
                     seg = 7'b1111111;
             endcase
         end

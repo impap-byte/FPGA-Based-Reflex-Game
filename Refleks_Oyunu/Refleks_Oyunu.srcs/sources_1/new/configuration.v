@@ -1,15 +1,16 @@
 `timescale 1ns / 1ps
 
 module configuration(
+    
     input clk,
     input rst,
     input btnC,
-    input [8:0] sw,       // Raw switches from Basys3
+    input [8:0] sw,
     
     output reg [1:0] player_count,
     output reg hardmode,
     output reg [3:0] max_round,
-    output reg elimination, // Added the elimination output
+    output reg elimination,
     output reg config_done
 );
     wire debounced, confirm;
@@ -30,7 +31,7 @@ module configuration(
             hardmode     <= 1'b0;
         end 
         else if (confirm && !config_done) begin
-            // Validate the inputs. 
+            // Konfig ilk kez yapiliyorsa: 
 
             if (p_count != 2'b11) begin 
                 player_count <= p_count;
@@ -39,7 +40,7 @@ module configuration(
                 elimination  <= elim;
                 hardmode     <= mode;
                 
-                config_done  <= 1'b1; // Lock the configuration
+                config_done  <= 1'b1;
             end
         end
     end

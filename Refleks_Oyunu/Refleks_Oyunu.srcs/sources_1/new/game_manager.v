@@ -53,6 +53,7 @@ module game_manager(
     wire p4_valid = p4_active && !p4_fs;
 
     wire [1:0] p1_rank, p2_rank, p3_rank, p4_rank;
+    reg prev_config_done;
     
     wire [2:0] active_count = p1_active + p2_active + p3_active + p4_active;
     wire game_over_early = elimination && (active_count <= 1);
@@ -176,7 +177,7 @@ module game_manager(
         .an(an) 
     );
     
-    localparam NEXT_ROUND = 4'd9;
+    localparam NEXT_ROUND = 4'd10;
     wire last_round = (current_round == max_round);
     
     always @(posedge clk) begin
@@ -190,7 +191,9 @@ module game_manager(
     localparam WAIT_START       = 4'd2;
     localparam DISPLAY_SEQUENCE = 4'd3;
     localparam RANDOM_WAIT      = 4'd4;
+    localparam UART_ROUND_WAIT  = 4'd9;
     
+    // FS olarak sayilacak zamanlar
     wire in_early_zone = (fsm_state == DISPLAY_SEQUENCE) || (fsm_state == RANDOM_WAIT);
     
     always @(posedge clk) begin
@@ -211,14 +214,25 @@ module game_manager(
         if (rst) begin
             p1_active <= 1'b1;
             p2_active <= 1'b1;
-            p3_active <= (player_count == 2'b00) ? 0 : 1;
-            p4_active <= (player_count != 2'b10) ? 0 : 1;
-        end 
-        else if (fsm_state == NEXT_ROUND && elimination) begin
-            if (p1_fs || p1_to) p1_active <= 1'b0;
-            if (p2_fs || p2_to) p2_active <= 1'b0;
-            if (p3_fs || p3_to) p3_active <= 1'b0;
-            if (p4_fs || p4_to) p4_active <= 1'b0;
+            p3_active <= (player_count >= 2'b01) ? 1'b1 : 1'b0;
+            p4_active <= (player_count == 2'b10) ? 1'b1 : 1'b0;
+            prev_config_done <= 1'b0;
+        end else begin
+            prev_config_done <= config_done;
+
+            if (config_done && !prev_config_done) begin
+                p1_active <= 1'b1;
+                p2_active <= 1'b1;
+                p3_active <= (player_count >= 2'b01) ? 1'b1 : 1'b0;
+                p4_active <= (player_count == 2'b10) ? 1'b1 : 1'b0;
+            end
+                // Otherwise handle elimination when UART round printing finishes (before NEXT_ROUND decision)
+                else if (fsm_state == UART_ROUND_WAIT && uart_done && elimination) begin
+                if (p1_fs || p1_to) p1_active <= 1'b0;
+                if (p2_fs || p2_to) p2_active <= 1'b0;
+                if (p3_fs || p3_to) p3_active <= 1'b0;
+                if (p4_fs || p4_to) p4_active <= 1'b0;
+            end
         end
     end
     

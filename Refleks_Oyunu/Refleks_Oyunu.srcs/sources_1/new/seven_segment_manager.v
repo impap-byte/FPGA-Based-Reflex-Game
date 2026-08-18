@@ -6,15 +6,15 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
     input [3:0] round_count,
     input display_enable,
     output reg done,
-    output [6:0] seg,  // Pass-through to physical pins
-    output [3:0] an    // Pass-through to physical pins
+    output [6:0] seg, 
+    output [3:0] an
 );  
     
-    // 0 for even rounds (4, 6), 1 for odd rounds (5, 7)
+    // 0 for even rounds, 1 for odd rounds
     wire even_odd = round_count[0]; 
     
     reg [3:0] digit0, digit1, digit2, digit3;
-    reg [3:0] digit_enable; // 4-bit mask to tell the driver which digits are actively ON
+    reg [3:0] digit_enable; // 4-bit mask to tell the driver which digits are actively on.
     
     seven_segment_driver driver(
         .clk(clk),
@@ -34,7 +34,7 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
     localparam SECOND = 3'd2;
     localparam THIRD  = 3'd3;
     localparam FOURTH = 3'd4;
-    localparam FIFTH  = 3'd5; // Added to prevent the logic lockup
+    localparam FIFTH  = 3'd5;
     
     reg [2:0] state;
     reg [31:0] counter;
@@ -46,16 +46,14 @@ module seven_segment_manager #(parameter DIGIT_WAIT_TIME = 50000000)(
             done <= 0;
             digit_enable <= 4'b0000;
             
-            // Initialize digits so they don't display '0' randomly before assignment
-            digit0 <= 4'hF; // Assuming your driver turns 4'hF into a blank display
+            digit0 <= 4'hF; 
             digit1 <= 4'hF; 
             digit2 <= 4'hF;
             digit3 <= 4'hF;
         end else if (display_enable) begin
 
             if (state == FIFTH) begin
-                // Sequence is fully visible: latch done high and stay here.
-                // (Counter is irrelevant now, so it's never checked/incremented again.)
+                // Tum LEDLER acik hali
                 done <= 1'b1;
             end else if (counter == DIGIT_WAIT_TIME - 1) begin
                 counter <= 0;
