@@ -22,25 +22,38 @@ This project features a game coded in Verilog and running on a Basys3 FPGA, that
 - __SW8__ -> Elimination mode active if 1
 - __SW7__ -> Hard mode active if 1
 
+### Elimination Mode
+* **When Elimination Mode is ON:**
+  * Players who press the button before the LEDs turn off are **eliminated** from subsequent rounds.
+  * Players who fail to press the button within **5 seconds** after the blackout are **eliminated** from subsequent rounds.
+
+* **When Elimination Mode is OFF:**
+  * Players who commit these errors simply receive **0 points** for that round and **continue playing** in subsequent rounds.
+    
+## Difficulty Mode 
+The difficulty mode determines the random time interval to wait before the 7-segment LEDs turn off.
+- Easy mode: 2.0 – 5.0 seconds 
+- Hard mode: 0.5 – 5.0 seconds
+
 ## Modules
 
 ### configuration.v
-Sets game modes based on switches; rejects invalid configurations
+Sets game modes based on switches; rejects invalid configurations.
 
 ### game_manager.v
-Controls round count and eliminated players; acts as a bridge between modules
+Controls round count and eliminated players; acts as a bridge between modules.
 
 ### game_fsm.v
-Handles state transitions and communicates current/previous states to game_manager
+Handles state transitions and communicates current/previous states to game_manager.
 
 ### wait_manager.v
-Generates a random waiting time based on hard/easy mode using an internal LFSR
+Generates a random waiting time based on hard/easy mode using an internal LFSR(Linear Feedback Shift Register).
 
 ### buttons.v
-Ensures correct operation of player buttons using edge detection and debouncing
+Ensures correct operation of player buttons using edge detection and debouncing.
 
 ### reaction_timer.v
-Measures player reaction times and transmits TO (Timeout), FS (False Start), or timing data to score_manager via game_manager for calculations
+Measures player reaction times and transmits TO (Timeout), FS (False Start), or timing data to score_manager via game_manager for calculations.
 
 ### score_manager.v
 Calculates rankings and scores. The submodule (total_score_manager.v) stores/updates the total scores.
