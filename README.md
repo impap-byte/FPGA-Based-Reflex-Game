@@ -1,6 +1,6 @@
 # FPGA-Based Reflex Game
 
-This game was designed as part of TOBB ETU Computer Engineering course [BIL265(Logical Circuit Design)](https://abys.etu.edu.tr/public/lesson.jsp?program=5&lang=tr&lesson=B%C4%B0L265). 
+This game was designed as part of TOBB ETU Computer Engineering course [BIL265(Logical Circuit Design and its Applications)](https://abys.etu.edu.tr/public/lesson.jsp?program=5&lang=tr&lesson=B%C4%B0L265). 
 
 This project features a game coded in Verilog and running on a Basys3 FPGA, that measures the players' reaction times and handles an FSM. During the game, the four digits on the 7-segment display of Basys3 light up in sequence. After a random delay suddenly all the digits turn off. The player who presses the button first after the blackout wins the round. The logs are sent to the computer at the end of each round through UART. Essentially, the game works in similar fashion to the following: https://www.youtube.com/watch?v=3o2ulXGwy-k&t=296s.
 
