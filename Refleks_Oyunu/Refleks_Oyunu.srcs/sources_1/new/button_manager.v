@@ -5,16 +5,16 @@ module button_manager(
     input clk,
     input rst,
 
-    // Ham buton giriþleri
+// Ham buton giriþleri
     input btn_u,
     input btn_l,
     input btn_r,
     input btn_d,
 
-    // 2,3 veya 4 oyuncu
+// 2,3 veya 4 oyuncu
     input [1:0] player_count,
 
-    // Her oyuncu için tek clockluk pulse
+// Her oyuncu için tek clockluk pulse
     output player1_pulse,
     output player2_pulse,
     output player3_pulse,
@@ -22,27 +22,23 @@ module button_manager(
 
 );
 
-    //-------------------------------------------------------
-    // Debounce çýkýþlarý
-    //-------------------------------------------------------
+
+ // Debounce çýkýþlarý
+
 
     wire p1_db;
     wire p2_db;
     wire p3_db;
     wire p4_db;
 
-    //-------------------------------------------------------
-    // Edge detector çýkýþlarý
-    //-------------------------------------------------------
+// Edge detector çýkýþlarý
 
     wire p1_edge;
     wire p2_edge;
     wire p3_edge;
     wire p4_edge;
 
-    //-------------------------------------------------------
     // Debounce Modülleri
-    //-------------------------------------------------------
 
     button_debounce db_p1(
         .clk(clk),
@@ -72,9 +68,7 @@ module button_manager(
         .btn_debounced(p4_db)
     );
 
-    //-------------------------------------------------------
-    // Edge Detector Modülleri
-    //-------------------------------------------------------
+ // Edge Detectorlar
 
     edge_detector ed_p1(
         .clk(clk),
@@ -104,14 +98,13 @@ module button_manager(
         .pulse_out(p4_edge)
     );
 
-    //-------------------------------------------------------
-    // Oyuncu sayýsýna göre aktif et
-    //
-    // player_count:
-    // 00 -> 2 oyuncu
-    // 01 -> 3 oyuncu
-    // 10 -> 4 oyuncu
-    //-------------------------------------------------------
+
+
+ // player_count:
+ // 00 -> 2 oyuncu
+ // 01 -> 3 oyuncu
+ // 10 -> 4 oyuncu
+
 
     assign player1_pulse = p1_edge;
 

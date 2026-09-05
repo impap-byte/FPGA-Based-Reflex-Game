@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-// Bunu AI yapt? test için kullan?lacak submitlenmeyecek zaten
+// UART Test File
 module uart_rx(
     input            clk,
     input            reset,

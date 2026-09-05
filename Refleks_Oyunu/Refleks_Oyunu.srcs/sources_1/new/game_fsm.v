@@ -34,7 +34,6 @@ module game_fsm(
     localparam UART_ROUND_WAIT  = 4'd9;
     localparam NEXT_ROUND       = 4'd10;
     
-    // Added dedicated states to print the Game Over winner message
     localparam UART_OVER_PULSE  = 4'd11;
     localparam UART_OVER_WAIT   = 4'd12;
     localparam GAME_FINISH      = 4'd13;
@@ -99,7 +98,7 @@ module game_fsm(
                 next_state = UART_OVER_WAIT; 
             end
             UART_OVER_WAIT: begin
-                if(uart_done) next_state = GAME_FINISH; // Wait for final print to finish
+                if(uart_done) next_state = GAME_FINISH; 
             end
             
             GAME_FINISH: begin
@@ -146,9 +145,7 @@ module game_fsm(
             UART_ROUND_PULSE: begin
                 uart_start = 1; 
             end
-            // In the WAIT state, uart_start drops to 0 automatically
             
-            // Same for the Game Over print, but ensure game_over is High!..
             UART_OVER_PULSE: begin
                 uart_start = 1;
                 game_over = 1;

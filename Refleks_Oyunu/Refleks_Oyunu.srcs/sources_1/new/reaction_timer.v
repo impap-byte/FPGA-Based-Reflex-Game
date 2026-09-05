@@ -4,7 +4,7 @@ module reaction_timer(
 
     input clk,
     input rst,
-    input start, // FSM kontrol?
+    input start, // FSM
     input active_p1, // Aktif oyuncu 1
     input active_p2, // Aktif oyuncu 2
     input active_p3, // Aktif oyuncu 3

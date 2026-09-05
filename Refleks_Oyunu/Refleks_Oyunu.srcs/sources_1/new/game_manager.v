@@ -226,7 +226,7 @@ module game_manager(
                 p3_active <= (player_count >= 2'b01) ? 1'b1 : 1'b0;
                 p4_active <= (player_count == 2'b10) ? 1'b1 : 1'b0;
             end
-                // Otherwise handle elimination when UART round printing finishes (before NEXT_ROUND decision)
+
                 else if (fsm_state == UART_ROUND_WAIT && uart_done && elimination) begin
                 if (p1_fs || p1_to) p1_active <= 1'b0;
                 if (p2_fs || p2_to) p2_active <= 1'b0;

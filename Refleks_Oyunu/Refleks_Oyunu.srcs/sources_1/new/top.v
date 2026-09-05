@@ -1,7 +1,59 @@
 `timescale 1ns / 1ps
+// Refleks Oyunu - Gumus Adalar
+
+//BTNU: Oyuncu 1 
+//BTNL: Oyuncu 2 
+//BTNR: Oyuncu 3 
+//BTND: Oyuncu 4
+
+//Oyuncu 1: LED0-LED3 
+//Oyuncu 2: LED4-LED7 
+//Oyuncu 3: LED8-LED11 
+//Oyuncu 4: LED12-LED15
+
+//Konfigürasyon
+//SW15 -> 1 ise reset
+//SW14 ve SW13 -> Player count (00 -> 2 oyuncu, 01 -> 3 oyuncu, 10 -> 4 oyuncu)
+//SW12-SW9 -> Raunt Say?s? (0000 -> 1 raunt)
+//SW8 -> 1 ise eleme modu aktif
+//SW7 -> 1 ise zor mod aktif
+
+// Modüller
+
+//configuration.v
+//Switchlere gore oyun modlar?n? ayarlar, gecersiz konfigleri kabul etmez
+
+//game_manager.v
+//Tur say?s?n?, elenenleri kontrol eder ve moduller aras? kopru gorevi gorur
+
+//game_fsm.v
+//Durumlar arasi gecis yapar ve game_manager'a su anki ve bir onceki durumu iletir
+
+//wait_manager.v
+// Icindeki lfsr yardimiyla zor/kolay moda gore rastgele bekleme zamani uretir
+
+// buttons.v
+// edge detector ve debouncer yardimiyla oyuncu butonlarinin dogru calismasini saglar
+
+// reaction_timer.v
+// oyuncularin basma zamanlarini olcer ve hesaplamalar icin TO, FS veya zaman bilgilerini score managera game man. 
+// uzerinden iletir
+
+//score_manager.v
+// siralama ve puan hesaplar. Alt modulu(total_score_manager.v) genel puanlari depolar/gunceller
+
+//seven_segment_manager.v
+//seven segmenti refleks oyununa ozgu bir fsm sayesinde yonetir
+
+//uart_stream_manager.v
+// Icindeki bcd donusturuculer sayesinde binary degerleri bcd'ye cevirir ve UART protokolu uzerinden yaziyla
+// beraber bilgisayara yollar
+
+//led_manager.v
+//Siralamaya gore ledleri yakar
 
 module top (
-    input clk,          // 100 MHz Sistem Saati
+    input clk,        
     input btnC,        
     input btnU,         
     input btnD,
@@ -10,10 +62,10 @@ module top (
     input reset,
     input [8:0] sw,
     
-    output tx,          // UART TX Ç?k??? (Bilgisayara giden hat)
-    output [15:0] led,  // led ç?k??lar?
+    output tx,          
+    output [15:0] led,  // led cikislari  
     output [6:0] seg,   // 7-segment display
-    output [3:0] an     // 7-segment display anot
+    output [3:0] an    
 );
 
     wire config_done, hardmode, elimination;

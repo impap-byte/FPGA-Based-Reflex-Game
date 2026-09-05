@@ -4,9 +4,9 @@ module uart_stream_manager(
     input clk,
     input rst,
 
-    input        start_print,   // game_fsm.uart_start
-    input          game_over,   // game_fsm'den oyunun bittigini soyleyen sinyal
-    input [3:0]    round_num,     // round_count (0 tabanli)
+    input        start_print,
+    input          game_over,  
+    input [3:0]    round_num,     // round_count (0-tabanli)
     input [1:0]  player_count,  // 00->2, 01->3, 10->4 oyuncu
 
     input [12:0] p1_time, p2_time, p3_time, p4_time,
@@ -32,6 +32,7 @@ module uart_stream_manager(
     
     bcd_converter conv_t1 (p1_time, p1_time_bcd);
     bcd_converter conv_t2 (p2_time, p2_time_bcd);
+    
     bcd_converter conv_t3 (p3_time, p3_time_bcd);
     bcd_converter conv_t4 (p4_time, p4_time_bcd);
     
@@ -40,14 +41,20 @@ module uart_stream_manager(
     bcd_converter conv_s3 ({6'd0, p3_total}, p3_total_bcd);
     bcd_converter conv_s4 ({6'd0, p4_total}, p4_total_bcd);
 
-    // Kac kisinin kazandigi sayilmaktadir
     wire [2:0] winner_count = ((f_rank_p1 == 2'd0 && p1_active) ? 1 : 0) +
                               ((f_rank_p2 == 2'd0 && p2_active) ? 1 : 0) +
                               ((f_rank_p3 == 2'd0 && p3_active) ? 1 : 0) +
                               ((f_rank_p4 == 2'd0 && p4_active) ? 1 : 0);
-    wire draw = (winner_count > 1);
-
-    
+                              
+    wire p1_lost = !p1_active || p1_fs || p1_to;
+    wire p2_lost = !p2_active || p2_fs || p2_to;
+    wire p3_lost = !p3_active || p3_fs || p3_to;
+    wire p4_lost = !p4_active || p4_fs || p4_to;
+    // "herkes kaybetti"nin tanimi kac kisininin oynadigine gore degisiyor
+    wire all_players_lost = (player_count == 2'b00) ? (p1_lost && p2_lost) :
+                           (player_count == 2'b01) ? (p1_lost && p2_lost && p3_lost) :
+                                                     (p1_lost && p2_lost && p3_lost && p4_lost);
+    wire draw = (winner_count > 1) || all_players_lost;
 
     localparam IDLE      = 2'b00;
     localparam SENDCHAR  = 2'b01;
@@ -127,7 +134,8 @@ module uart_stream_manager(
             7'd32: round_char = "2";
             7'd33: round_char = ":";
             7'd34: begin 
-                if(!p2_active) round_char = "N";
+                if      (!p2_active) round_char = "N";
+                
                 else if (p2_fs)      round_char = "F";
                 else if (p2_to)      round_char = "T";
                 else                 round_char = "0" + p2_time_bcd[15:12];
@@ -160,6 +168,7 @@ module uart_stream_manager(
             7'd42: round_char = ":";
             7'd43: round_char = "0" + p2_score;
             7'd44: round_char = " ";
+            
             7'd45: round_char = "T";
             7'd46: round_char = ":";
             7'd47: round_char = "0" + p2_total_bcd[11:8];
@@ -289,13 +298,14 @@ module uart_stream_manager(
             
             7'd18: end_char = 8'h20;
             7'd19: end_char = 8'h20;
-          
+            // If there's a draw, print "DRAW"
+            // When there is no draw, these extra characters are blank.
             7'd20: end_char = draw ? "D" : " ";
             7'd21: end_char = draw ? "R" : " ";
             7'd22: end_char = draw ? "A" : " ";
             7'd23: end_char = draw ? "W" : " ";
-            7'd24: end_char = 8'h0D; // CR
-            7'd25: end_char =  8'h0A; // LF 
+            7'd24: end_char = draw ? 8'h0D : 8'h20;
+            7'd25: end_char = draw ? 8'h0A : 8'h20;
 
             default: end_char = " ";
         endcase
